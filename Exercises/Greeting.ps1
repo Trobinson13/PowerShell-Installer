@@ -7,7 +7,7 @@ function Get-Greeting {
 
     $message = "$Greeting, $Name!"
 
-    if($Loud) {
+    if ($Loud) {
         $message = $message.ToUpper()
     }
 

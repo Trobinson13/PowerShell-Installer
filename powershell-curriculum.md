@@ -11,16 +11,16 @@ Each module builds on the last. Write the code, run it, break it, fix it.
 **Goal:** By the end of this module, you should be able to create a script file, run it, turn repeated logic into a function, pass named parameters, validate input, and control what your function returns.
 
 **Files you will create:**
-- `Hello.ps1`
-- `Greeting.ps1`
-- `MathHelper.ps1`
-- `FileTools.ps1`
+- `Exercises/Hello.ps1`
+- `Exercises/Greeting.ps1`
+- `Exercises/MathHelper.ps1`
+- `Exercises/FileTools.ps1`
 
 ### 1.1 - Your First `.ps1` File
 
 A `.ps1` file is a PowerShell script. It is just a text file containing PowerShell commands.
 
-Create a file called `Hello.ps1`:
+Create a file called `Exercises/Hello.ps1`:
 
 ```powershell
 # Hello.ps1
@@ -30,7 +30,7 @@ Write-Host "Hello from a script file!"
 Run it from the folder where the file lives:
 
 ```powershell
-.\Hello.ps1
+.\Exercises\Hello.ps1
 ```
 
 Expected output:
@@ -61,8 +61,8 @@ Write-Host "Hello, $name!"
 Run both versions:
 
 ```powershell
-.\Hello.ps1
-.\Hello.ps1 Tre
+.\Exercises\Hello.ps1
+.\Exercises\Hello.ps1 Tre
 ```
 
 Expected output:
@@ -74,7 +74,7 @@ Hello, Tre!
 
 **Checkpoint:** `$args` is the automatic array PowerShell fills with unnamed arguments passed to a script. `$args[0]` means "the first argument."
 
-**Exercise:** Add a second argument for the greeting word. For example, `.\Hello.ps1 Tre Hi` should print `Hi, Tre!`. If no greeting is provided, default to `Hello`.
+**Exercise:** Add a second argument for the greeting word. For example, `.\Exercises\Hello.ps1 Tre Hi` should print `Hi, Tre!`. If no greeting is provided, default to `Hello`.
 
 ---
 
@@ -82,7 +82,7 @@ Hello, Tre!
 
 Scripts are good for running commands. Functions are better when you want reusable logic.
 
-Create `Greeting.ps1`:
+Create `Exercises/Greeting.ps1`:
 
 ```powershell
 # Greeting.ps1
@@ -99,12 +99,12 @@ function Get-Greeting {
 Load the function into your current terminal session by dot-sourcing the file:
 
 ```powershell
-. .\Greeting.ps1
+. .\Exercises\Greeting.ps1
 ```
 
-The first dot means "load this into the current session." The second dot is part of the relative path `.\Greeting.ps1`. The space between them matters.
+The first dot means "load this into the current session." The second dot is part of the relative path `.\Exercises\Greeting.ps1`. The space between them matters.
 
-> **Important:** If you run `.\Greeting.ps1`, you probably will not see anything. That file only defines the function. The code inside the function runs only when you call `Get-Greeting`.
+> **Important:** If you run `.\Exercises\Greeting.ps1`, you probably will not see anything. That file only defines the function. The code inside the function runs only when you call `Get-Greeting`.
 
 Now call the function:
 
@@ -164,7 +164,7 @@ function Get-Greeting {
 Try it:
 
 ```powershell
-. .\Greeting.ps1
+. .\Exercises\Greeting.ps1
 Get-Greeting -Name "Tre"
 Get-Greeting -Name "Tre" -Loud
 ```
@@ -196,7 +196,7 @@ Welcome, Tre!
 
 PowerShell can enforce parameter rules before the function body runs.
 
-Create `MathHelper.ps1`:
+Create `Exercises/MathHelper.ps1`:
 
 ```powershell
 # MathHelper.ps1
@@ -217,7 +217,7 @@ function Get-Sum {
 Load and call it:
 
 ```powershell
-. .\MathHelper.ps1
+. .\Exercises\MathHelper.ps1
 Get-Sum -A 3 -B 7
 ```
 
@@ -243,7 +243,7 @@ What should happen:
 - `[ValidateRange(1, 100)]` rejects numbers outside the allowed range.
 - Validation keeps bad input out of your function body.
 
-Create `FileTools.ps1`:
+Create `Exercises/FileTools.ps1`:
 
 ```powershell
 # FileTools.ps1
@@ -267,8 +267,8 @@ function Get-FileInfo {
 Try it against one of your existing files:
 
 ```powershell
-. .\FileTools.ps1
-Get-FileInfo -Path .\Hello.ps1
+. .\Exercises\FileTools.ps1
+Get-FileInfo -Path .\Exercises\Hello.ps1
 ```
 
 **Exercise:** Add a `[ValidateScript()]` rule to `Get-Greeting` that rejects blank names. Hint: `-not [string]::IsNullOrWhiteSpace($_)`.
@@ -328,10 +328,10 @@ Expected output:
 System.Int32
 ```
 
-**Exercise:** Add `Get-Square` to `MathHelper.ps1`, dot-source the file again, and confirm both `Get-Sum` and `Get-Square` are available in your session.
+**Exercise:** Add `Get-Square` to `Exercises/MathHelper.ps1`, dot-source the file again, and confirm both `Get-Sum` and `Get-Square` are available in your session.
 
 **Module 1 review:**
-- Run a script with `.\ScriptName.ps1`.
+- Run a script with `.\Exercises\ScriptName.ps1`.
 - Use `$args` for quick unnamed script arguments.
 - Prefer `param()` for real functions.
 - Dot-source files when you want their functions available in your current session.
@@ -351,22 +351,22 @@ Install-Module -Name Pester -Force -Scope CurrentUser -SkipPublisherCheck
 Import-Module Pester
 ```
 
-Convention: test files are named `*.Tests.ps1` and live alongside the code they test.
+Convention: exercise files live in `Exercises/`, and test files are named `*.Tests.ps1` under `Tests/`.
 
 ---
 
 ### 2.2 — Your First Test
 
-Given `Greeting.ps1` from Module 1, create `Greeting.Tests.ps1`:
+Given `Exercises/Greeting.ps1` from Module 1, create `Tests/Greeting.Tests.ps1`:
 
 ```powershell
-# Greeting.Tests.ps1
-
-BeforeAll {
-    . $PSScriptRoot/Greeting.ps1    # dot-source the code under test
-}
+# Tests/Greeting.Tests.ps1
 
 Describe "Get-Greeting" {
+    BeforeAll {
+        . $PSScriptRoot/../Exercises/Greeting.ps1    # dot-source the code under test
+    }
+
     It "returns a greeting with the given name" {
         $result = Get-Greeting -Name "Tre"
         $result | Should -Be "Hello, Tre!"
@@ -387,7 +387,7 @@ Describe "Get-Greeting" {
 Run it:
 
 ```powershell
-Invoke-Pester ./Greeting.Tests.ps1 -Output Detailed
+Invoke-Pester ./Tests/Greeting.Tests.ps1 -Output Detailed
 ```
 
 **Key concepts:**
@@ -404,7 +404,7 @@ You can assert that a function throws:
 ```powershell
 Describe "Get-Sum" {
     BeforeAll {
-        . $PSScriptRoot/MathHelper.ps1
+        . $PSScriptRoot/../Exercises/MathHelper.ps1
     }
 
     It "throws when B is out of range" {

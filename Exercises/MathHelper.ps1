@@ -9,5 +9,4 @@ function Get-Sum {
     )
 
     return $A + $B
-    
 }
