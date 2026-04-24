@@ -8,7 +8,17 @@ Each module builds on the last. Write the code, run it, break it, fix it.
 
 ## Module 1: Scripts, Functions, and Parameters
 
-### 1.1 — Your First `.ps1` File
+**Goal:** By the end of this module, you should be able to create a script file, run it, turn repeated logic into a function, pass named parameters, validate input, and control what your function returns.
+
+**Files you will create:**
+- `Hello.ps1`
+- `Greeting.ps1`
+- `MathHelper.ps1`
+- `FileTools.ps1`
+
+### 1.1 - Your First `.ps1` File
+
+A `.ps1` file is a PowerShell script. It is just a text file containing PowerShell commands.
 
 Create a file called `Hello.ps1`:
 
@@ -17,21 +27,62 @@ Create a file called `Hello.ps1`:
 Write-Host "Hello from a script file!"
 ```
 
-Run it from a terminal:
+Run it from the folder where the file lives:
 
 ```powershell
 .\Hello.ps1
 ```
 
-> **Note:** If you get an execution policy error, run `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned` once.
+Expected output:
 
-**Exercise:** Modify `Hello.ps1` to accept a name via `$args[0]` and greet that person. Run it with `.\Hello.ps1 Tre`.
+```text
+Hello from a script file!
+```
+
+> **Note:** If you get an execution policy error, run this once, then try the script again:
+>
+> ```powershell
+> Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+> ```
+
+Now make the script accept a name from the command line:
+
+```powershell
+# Hello.ps1
+$name = $args[0]
+
+if (-not $name) {
+    $name = "World"
+}
+
+Write-Host "Hello, $name!"
+```
+
+Run both versions:
+
+```powershell
+.\Hello.ps1
+.\Hello.ps1 Tre
+```
+
+Expected output:
+
+```text
+Hello, World!
+Hello, Tre!
+```
+
+**Checkpoint:** `$args` is the automatic array PowerShell fills with unnamed arguments passed to a script. `$args[0]` means "the first argument."
+
+**Exercise:** Add a second argument for the greeting word. For example, `.\Hello.ps1 Tre Hi` should print `Hi, Tre!`. If no greeting is provided, default to `Hello`.
 
 ---
 
-### 1.2 — Writing Functions
+### 1.2 - Writing Functions
 
-Functions are reusable blocks of logic. Create `Greeting.ps1`:
+Scripts are good for running commands. Functions are better when you want reusable logic.
+
+Create `Greeting.ps1`:
 
 ```powershell
 # Greeting.ps1
@@ -39,22 +90,41 @@ function Get-Greeting {
     param(
         [string]$Name = "World"
     )
+
     return "Hello, $Name!"
 }
 ```
 
-To use this function, you need to **dot-source** the file first (this loads it into your current session), then call it:
+Load the function into your current terminal session by dot-sourcing the file:
 
 ```powershell
-. .\Greeting.ps1        # dot-source — note the space between the dots
+. .\Greeting.ps1
+```
+
+The first dot means "load this into the current session." The second dot is part of the relative path `.\Greeting.ps1`. The space between them matters.
+
+Now call the function:
+
+```powershell
+Get-Greeting
 Get-Greeting -Name "Tre"
 ```
 
-**Key concepts:**
-- `param()` declares named parameters with types and defaults.
-- Dot-sourcing (`. .\File.ps1`) loads functions into the current scope. Without it, the function isn't available after the script exits.
+Expected output:
 
-**Exercise:** Add a `-Loud` switch parameter that uppercases the output when present:
+```text
+Hello, World!
+Hello, Tre!
+```
+
+**Key concepts:**
+- `function Get-Greeting { ... }` defines a reusable command.
+- `param()` declares named parameters.
+- `[string]$Name = "World"` means the parameter should be text and has a default value.
+- `return` sends a value back to the caller.
+- Dot-sourcing (`. .\File.ps1`) loads functions into the current scope.
+
+Add a `-Loud` switch parameter:
 
 ```powershell
 function Get-Greeting {
@@ -62,17 +132,53 @@ function Get-Greeting {
         [string]$Name = "World",
         [switch]$Loud
     )
-    $msg = "Hello, $Name!"
-    if ($Loud) { $msg = $msg.ToUpper() }
-    return $msg
+
+    $message = "Hello, $Name!"
+
+    if ($Loud) {
+        $message = $message.ToUpper()
+    }
+
+    return $message
 }
+```
+
+Try it:
+
+```powershell
+. .\Greeting.ps1
+Get-Greeting -Name "Tre"
+Get-Greeting -Name "Tre" -Loud
+```
+
+Expected output:
+
+```text
+Hello, Tre!
+HELLO, TRE!
+```
+
+**Checkpoint:** A `[switch]` parameter works like an on/off flag. If you include `-Loud`, `$Loud` is true. If you leave it off, `$Loud` is false.
+
+**Exercise:** Add a `[string]$Greeting = "Hello"` parameter so this works:
+
+```powershell
+Get-Greeting -Name "Tre" -Greeting "Welcome"
+```
+
+Expected output:
+
+```text
+Welcome, Tre!
 ```
 
 ---
 
-### 1.3 — Mandatory Parameters and Validation
+### 1.3 - Mandatory Parameters and Validation
 
-PowerShell can enforce parameter rules declaratively:
+PowerShell can enforce parameter rules before the function body runs.
+
+Create `MathHelper.ps1`:
 
 ```powershell
 # MathHelper.ps1
@@ -85,37 +191,134 @@ function Get-Sum {
         [ValidateRange(1, 100)]
         [int]$B
     )
+
     return $A + $B
 }
 ```
 
-Try calling it without arguments (`Get-Sum`) — PowerShell will prompt you. Try passing `$B = 200` — validation will reject it.
+Load and call it:
 
-**Exercise:** Write a function `Get-FileInfo` that takes a mandatory `[string]$Path` parameter with a `[ValidateScript({ Test-Path $_ })]` attribute. It should return the file's name, size, and last-modified date as a hashtable.
+```powershell
+. .\MathHelper.ps1
+Get-Sum -A 3 -B 7
+```
+
+Expected output:
+
+```text
+10
+```
+
+Now test the guardrails:
+
+```powershell
+Get-Sum
+Get-Sum -A 3 -B 200
+```
+
+What should happen:
+- `Get-Sum` prompts you for the mandatory values.
+- `-B 200` fails because `B` must be from `1` through `100`.
+
+**Key concepts:**
+- `[Parameter(Mandatory)]` requires the caller to provide a value.
+- `[ValidateRange(1, 100)]` rejects numbers outside the allowed range.
+- Validation keeps bad input out of your function body.
+
+Create `FileTools.ps1`:
+
+```powershell
+# FileTools.ps1
+function Get-FileInfo {
+    param(
+        [Parameter(Mandatory)]
+        [ValidateScript({ Test-Path $_ -PathType Leaf })]
+        [string]$Path
+    )
+
+    $file = Get-Item -Path $Path
+
+    return @{
+        Name         = $file.Name
+        SizeBytes    = $file.Length
+        LastModified = $file.LastWriteTime
+    }
+}
+```
+
+Try it against one of your existing files:
+
+```powershell
+. .\FileTools.ps1
+Get-FileInfo -Path .\Hello.ps1
+```
+
+**Exercise:** Add a `[ValidateScript()]` rule to `Get-Greeting` that rejects blank names. Hint: `-not [string]::IsNullOrWhiteSpace($_)`.
 
 ---
 
-### 1.4 — Output, Return Values, and the Pipeline
+### 1.4 - Output, Return Values, and the Pipeline
 
-PowerShell functions emit **all** uncaptured output to the pipeline, not just what you `return`. This is a common gotcha:
+PowerShell functions emit all uncaptured output to the pipeline, not just what you `return`. This is one of the first surprising things worth learning.
+
+Try this example:
 
 ```powershell
 function Get-Data {
-    Write-Host "Starting..."       # goes to console only — NOT in the pipeline
-    "some debug text"              # THIS goes into the pipeline (unintentional)
-    return @{ Value = 42 }         # this also goes into the pipeline
+    Write-Host "Starting..."       # console only, not captured in the result
+    "some debug text"              # pipeline output
+    return @{ Value = 42 }         # also pipeline output
 }
 
 $result = Get-Data
-# $result is now an array: ("some debug text", @{ Value = 42 })
+$result
+$result.GetType().FullName
 ```
 
-**Rules of thumb:**
-- Use `Write-Host` or `Write-Verbose` for messages to the console (not captured).
-- Use `Write-Output` or bare expressions for intentional pipeline output.
-- Use `return` for clarity, but know it doesn't suppress earlier output.
+`$result` contains both `"some debug text"` and the hashtable. Because there are two pipeline outputs, PowerShell stores them as an array.
 
-**Exercise:** Write a function `Get-Square` that takes `[int]$Number` and returns only the squared value. Verify by assigning the result to a variable and checking its type with `$result.GetType()`.
+**Rules of thumb:**
+- Use `Write-Host` for simple screen-only messages.
+- Use `Write-Verbose` for optional diagnostic messages.
+- Use `Write-Output` or bare expressions for intentional pipeline output.
+- Use `return` for clarity, but remember it does not erase earlier output.
+
+Create a clean function:
+
+```powershell
+function Get-Square {
+    param(
+        [int]$Number
+    )
+
+    return $Number * $Number
+}
+```
+
+Verify that it returns only one value:
+
+```powershell
+$result = Get-Square -Number 5
+$result
+$result.GetType().FullName
+```
+
+Expected output:
+
+```text
+25
+System.Int32
+```
+
+**Exercise:** Add `Get-Square` to `MathHelper.ps1`, dot-source the file again, and confirm both `Get-Sum` and `Get-Square` are available in your session.
+
+**Module 1 review:**
+- Run a script with `.\ScriptName.ps1`.
+- Use `$args` for quick unnamed script arguments.
+- Prefer `param()` for real functions.
+- Dot-source files when you want their functions available in your current session.
+- Use validation attributes to reject bad input early.
+- Be intentional about what your functions write to the pipeline.
 
 ---
 
