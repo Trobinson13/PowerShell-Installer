@@ -91,7 +91,8 @@ function Get-Greeting {
         [string]$Name = "World"
     )
 
-    return "Hello, $Name!"
+    $message = "Hello, $Name!"
+    return $message
 }
 ```
 
@@ -102,6 +103,8 @@ Load the function into your current terminal session by dot-sourcing the file:
 ```
 
 The first dot means "load this into the current session." The second dot is part of the relative path `.\Greeting.ps1`. The space between them matters.
+
+> **Important:** If you run `.\Greeting.ps1`, you probably will not see anything. That file only defines the function. The code inside the function runs only when you call `Get-Greeting`.
 
 Now call the function:
 
@@ -114,6 +117,21 @@ Expected output:
 
 ```text
 Hello, World!
+Hello, Tre!
+```
+
+`return` does produce output in PowerShell. When you call `Get-Greeting` directly in the terminal, PowerShell displays the returned value for you.
+
+You can also capture the returned value in a variable:
+
+```powershell
+$message = Get-Greeting -Name "Tre"
+$message
+```
+
+Expected output:
+
+```text
 Hello, Tre!
 ```
 
